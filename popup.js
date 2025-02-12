@@ -7,45 +7,50 @@ document.getElementById("runQuery").addEventListener("click", async () => {
     return;
   }
 
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  // Retrieve API key from storage
+  chrome.storage.local.get(["openaiKey"], async (data) => {
+    const apiKey = data.openaiKey;
+    if (!apiKey) {
+      resultElement.textContent = "Please set your OpenAI API key in the options.";
+      return;
+    }
 
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    function: queryDOM,
-    args: [query]
-  }, (result) => {
-    resultElement.textContent = result[0]?.result || "No result found.";
+    // Call OpenAI to process the query
+    const parsedQuery = await getParsedQuery(apiKey, query);
+
+    if (!parsedQuery) {
+      resultElement.textContent = "Failed to process the query.";
+      return;
+    }
+
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      function: queryDOM,
+      args: [parsedQuery]
+    }, (result) => {
+      resultElement.textContent = result[0]?.result || "No result found.";
+    });
   });
 });
 
-function queryDOM(query) {
-  try {
-    if (query.includes("count")) {
-      let tag = query.split(" ")[0]; // Extract element type
-      return document.querySelectorAll(tag).length;
-    }
+// Function to send query to OpenAI
+async function getParsedQuery(apiKey, userQuery) {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "gpt-4",
+      messages: [{ role: "system", content: "You are an assistant that converts user natural language queries into DOM queries." },
+                 { role: "user", content: userQuery }],
+      max_tokens: 50
+    })
+  });
 
-    // Handling CSS queries
-    if (query.toLowerCase().includes("background color")) {
-      let selector = query.split("of ")[1].trim();
-      let element = document.querySelector(selector);
-      return element ? getComputedStyle(element).backgroundColor : "Element not found.";
-    }
-
-    if (query.toLowerCase().includes("font size")) {
-      let selector = query.split("of ")[1].trim();
-      let element = document.querySelector(selector);
-      return element ? getComputedStyle(element).fontSize : "Element not found.";
-    }
-
-    if (query.toLowerCase().includes("margin")) {
-      let selector = query.split("of ")[1].trim();
-      let element = document.querySelector(selector);
-      return element ? getComputedStyle(element).margin : "Element not found.";
-    }
-
-    return "Unsupported query format.";
-  } catch (error) {
-    return `Error: ${error.message}`;
-  }
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
 }

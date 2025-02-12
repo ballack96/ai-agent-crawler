@@ -2,23 +2,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "queryDOM") {
     let result;
     try {
-      if (message.query.includes("count")) {
-        let tag = message.query.split(" ")[0]; // Extract element type
+      const parsedQuery = message.query.toLowerCase();
+
+      if (parsedQuery.includes("count")) {
+        let tag = parsedQuery.split(" ")[0]; 
         result = document.querySelectorAll(tag).length;
-      } else if (message.query.toLowerCase().includes("background color")) {
-        let selector = message.query.split("of ")[1].trim();
+      } else if (parsedQuery.includes("background color")) {
+        let selector = parsedQuery.split("of ")[1].trim();
         let element = document.querySelector(selector);
         result = element ? getComputedStyle(element).backgroundColor : "Element not found.";
-      } else if (message.query.toLowerCase().includes("font size")) {
-        let selector = message.query.split("of ")[1].trim();
+      } else if (parsedQuery.includes("font size")) {
+        let selector = parsedQuery.split("of ")[1].trim();
         let element = document.querySelector(selector);
         result = element ? getComputedStyle(element).fontSize : "Element not found.";
-      } else if (message.query.toLowerCase().includes("margin")) {
-        let selector = message.query.split("of ")[1].trim();
-        let element = document.querySelector(selector);
-        result = element ? getComputedStyle(element).margin : "Element not found.";
       } else {
-        result = "Unsupported query format.";
+        result = "Unsupported query.";
       }
     } catch (error) {
       result = `Error: ${error.message}`;
