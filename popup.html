@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DOM AI Agent</title>
+  <title>DOM Test Generator</title>
   <style>
-    body { font-family: Arial, sans-serif; width: 250px; padding: 10px; }
+    body { font-family: Arial, sans-serif; width: 300px; padding: 10px; }
     button { margin-top: 10px; width: 100%; padding: 5px; }
+    pre { background: #f4f4f4; padding: 10px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
   </style>
 </head>
 <body>
-  <h3>Query the DOM</h3>
-  <input type="text" id="query" placeholder="Enter query (e.g., div count)">
-  <button id="runQuery">Run Query</button>
-  <p id="result"></p>
+  <h3>Generate Unit Tests</h3>
+  <button id="generateTests">Run Unit Test Analysis</button>
+  <button id="downloadTests" disabled>Download Jest Test Code</button>
+  <pre id="result"></pre>
 
   <script src="popup.js"></script>
 </body>
